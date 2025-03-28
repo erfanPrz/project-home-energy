@@ -1,0 +1,84 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.MuiPaper-root {
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.MuiButton-contained {
+  background: linear-gradient(45deg, #1976d2 30%, #21CBF3 90%);
+  box-shadow: 0 3px 5px 2px rgba(33, 203, 243, .3);
+  transition: all 0.3s ease;
+}
+
+.MuiButton-contained:hover {
+  background: linear-gradient(45deg, #1565c0 30%, #1cb5e0 90%);
+  box-shadow: 0 6px 10px 4px rgba(33, 203, 243, .3);
+}
+
+.MuiSlider-root {
+  color: #1976d2;
+}
+
+.MuiIconButton-root {
+  transition: transform 0.2s ease;
+}
+
+.MuiIconButton-root:hover {
+  transform: scale(1.1);
+}
+
+.MuiTypography-h4 {
+  background: linear-gradient(45deg, #1976d2 30%, #21CBF3 90%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+}
+
+/* Map container styles */
+.map-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.map-container:hover {
+  transform: scale(1.01);
+}
+
+.map-container iframe {
+  border: none;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* Chip styles */
+.MuiChip-root {
+  margin: 4px;
+  transition: all 0.2s ease;
+}
+
+.MuiChip-root:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+} 
