@@ -2,16 +2,44 @@ import axios from 'axios';
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyCiqVWo5XRjcyaYEyDbGIwU959fFPHe0rY';
 
+// Map of postal code prefixes to provinces
+const POSTAL_CODE_PROVINCES = {
+  'A': 'Newfoundland and Labrador',
+  'B': 'Nova Scotia',
+  'C': 'Prince Edward Island',
+  'E': 'New Brunswick',
+  'G': 'Quebec',
+  'H': 'Quebec',
+  'J': 'Quebec',
+  'K': 'Ontario',
+  'L': 'Ontario',
+  'M': 'Ontario',
+  'N': 'Ontario',
+  'P': 'Ontario',
+  'R': 'Manitoba',
+  'S': 'Saskatchewan',
+  'T': 'Alberta',
+  'V': 'British Columbia',
+  'X': 'Northwest Territories and Nunavut',
+  'Y': 'Yukon'
+};
+
 export const validateAddress = async (searchQuery) => {
   try {
     // Clean and format the search query
     const cleanQuery = searchQuery.trim().toUpperCase();
     
-    // If it's a postal code, add city and country to improve search accuracy
-    const isPostalCode = /^[A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d$/.test(cleanQuery.replace(/\s/g, ''));
-    const searchAddress = isPostalCode 
-      ? `${cleanQuery.replace(/\s/g, '')}, Toronto, Ontario, Canada`
-      : `${cleanQuery}, Canada`;
+    // If it's a postal code, add country to improve search accuracy
+    const isPostalCode = /^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z]\d[ABCEGHJ-NPRSTV-Z]\d$/i.test(cleanQuery.replace(/\s/g, ''));
+    let searchAddress;
+    
+    if (isPostalCode) {
+      const postalCode = cleanQuery.replace(/\s/g, '');
+      const province = POSTAL_CODE_PROVINCES[postalCode[0]];
+      searchAddress = `${postalCode}, ${province || ''}, Canada`;
+    } else {
+      searchAddress = `${cleanQuery}, Canada`;
+    }
 
     console.log('Searching for:', searchAddress);
 
@@ -41,6 +69,20 @@ export const validateAddress = async (searchQuery) => {
           success: false,
           error: 'Please enter a valid Canadian address with postal code'
         };
+      }
+
+      // Verify the postal code matches if one was provided
+      if (isPostalCode) {
+        const resultPostalCode = result.address_components
+          .find(component => component.types.includes('postal_code'))
+          ?.long_name.replace(/\s/g, '').toUpperCase();
+        
+        if (resultPostalCode !== cleanQuery.replace(/\s/g, '')) {
+          return {
+            success: false,
+            error: 'The provided postal code could not be found. Please verify and try again.'
+          };
+        }
       }
 
       return {
