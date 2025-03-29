@@ -45,24 +45,19 @@ British Columbia: Urban 1,400 sqft, Rural 1,800 sqft
 ```
 
 ### Energy Usage Calculation
-**Goal**: Base it on real data, adjusted for local differences.
-
-**Data Source**: Table 25-10-0060-01 (2021) gives GJ per household for electricity and total energy by province.
-
-**Province-Specific Energy Data**:
+**Source**:
+Statistics Canada Table 25-10-0060-01 (Household Energy Consumption, 2021).
+**Details**:
+Gives gigajoules (GJ) per household for electricity and total energy across 10 Canadian provinces.
+Example: Ontario → 30.0 GJ electricity, 89.3 GJ total per household.
+How Used:
+Converted to energy per square foot using estimated provincial house sizes (e.g., Ontario: 30.0 GJ ÷ 1,600 sqft = 5.22 kWh/sqft for electricity).
+Hardcoded in energyPerSqft object:
+**for ex** :
 ```
-Newfoundland and Labrador: 9.47 kWh/sqft, 0.0431 GJ/sqft
-Prince Edward Island: 6.44 kWh/sqft, 0.0467 GJ/sqft
-Nova Scotia: 6.86 kWh/sqft, 0.0441 GJ/sqft
-New Brunswick: 10.42 kWh/sqft, 0.0428 GJ/sqft
-Quebec: 11.42 kWh/sqft, 0.0455 GJ/sqft
-Ontario: 5.22 kWh/sqft, 0.0558 GJ/sqft
-Manitoba: 7.17 kWh/sqft, 0.0557 GJ/sqft
-Saskatchewan: 4.11 kWh/sqft, 0.0596 GJ/sqft
-Alberta: 3.58 kWh/sqft, 0.0677 GJ/sqft
-British Columbia: 5.47 kWh/sqft, 0.0492 GJ/sqft
+"Ontario": { electricity: 5.22, total: 0.0558 }
+"Alberta": { electricity: 3.58, total: 0.0677 }
 ```
-
 **Adjustment Formula**:
 - Rural (second char = 0): Base × 1.1
 - Urban (second char = 1-9): Base × 0.9
