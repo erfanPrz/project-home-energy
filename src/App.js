@@ -9,15 +9,19 @@ import {
   CircularProgress,
   Slider,
   Grid,
-  useTheme
+  Fade,
+  Alert,
+  IconButton,
+  InputAdornment,
+  Tooltip
 } from '@mui/material';
 import {
   Home as HomeIcon,
   Window as WindowIcon,
   Bolt as BoltIcon,
   LocationOn as LocationIcon,
-  Info as InfoIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
+  Clear as ClearIcon
 } from '@mui/icons-material';
 import { estimateHouseSize, estimateWindows, estimateEnergyUsage } from './utils/estimations';
 import { validateAddress } from './utils/addressValidation';
@@ -27,12 +31,11 @@ function App() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
   const [customSize, setCustomSize] = useState(null);
   const [addressDetails, setAddressDetails] = useState(null);
 
-  const theme = useTheme();
   const resultsRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   useEffect(() => {
     if (results && resultsRef.current) {
@@ -46,7 +49,6 @@ function App() {
     setLoading(true);
     setAddressDetails(null);
     setCustomSize(null);
-    setIsEditing(false);
 
     // Updated regex to match any valid Canadian postal code format
     const cleanPostalCode = searchQuery.replace(/\s+/g, '').toUpperCase();
@@ -102,6 +104,15 @@ function App() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClear = () => {
+    setSearchQuery('');
+    setError('');
+    setResults(null);
+    setAddressDetails(null);
+    setCustomSize(null);
+    searchInputRef.current?.focus();
   };
 
   // Helper function to determine if a postal code is rural based on province-specific patterns
@@ -160,173 +171,156 @@ function App() {
   };
 
   return (
-    <Box sx={{ 
-      minHeight: '100vh',
-      background: '#FFFFFF'
-    }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#F8FAFC' }}>
       {/* Hero Section */}
-      <Box sx={{
-        position: 'relative',
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        background: 'url("/plants-near-windows-that-show-outside-grass.jpg") center/cover no-repeat',
-        backgroundPosition: 'center 40%',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%)',
-          backdropFilter: 'blur(3px)',
-          zIndex: 1
-        }
-      }}>
-        <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 2 }}>
-          <Grid container spacing={4} alignItems="center">
-            <Grid item xs={12} md={7} lg={6} sx={{ 
-              textAlign: { xs: 'center', md: 'left' },
-              bgcolor: 'rgba(255, 255, 255, 0.5)',
-              backdropFilter: 'blur(8px)',
-              p: { xs: 3, md: 5 },
-              borderRadius: '32px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.2)'
-            }}>
-              <Typography 
-                variant="h1" 
-                sx={{
-                  fontSize: { xs: '2.5rem', md: '3.5rem', lg: '4rem' },
-                  fontWeight: 800,
-                  color: '#1A2027',
-                  mb: 2,
-                  lineHeight: 1.1,
-                  letterSpacing: '-0.02em'
-                }}
-              >
-                Discover Your
-                <Box component="span" sx={{ 
-                  display: 'block',
-                  background: 'linear-gradient(135deg, #2F7C31 0%, #38A169 100%)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  color: 'transparent',
-                  mt: 1
-                }}>
-                  Home's Energy Profile
-                </Box>
-              </Typography>
+      <Box 
+        sx={{ 
+          py: { xs: 8, md: 12 },
+          px: 3,
+          background: 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)'
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box sx={{ textAlign: 'center', mb: 6 }}>
+            <Typography 
+              variant="h2" 
+              sx={{ 
+                fontWeight: 800,
+                color: '#1A2027',
+                mb: 3,
+                fontSize: { xs: '2.5rem', md: '3.5rem' },
+                letterSpacing: '-0.02em'
+              }}
+            >
+              House Energy Estimator
+            </Typography>
+            <Typography 
+              sx={{ 
+                color: '#4B5563',
+                fontSize: { xs: '1.1rem', md: '1.25rem' },
+                maxWidth: '600px',
+                mx: 'auto'
+              }}
+            >
+              Get instant estimates for house size, windows, and energy usage based on your Canadian address
+            </Typography>
+          </Box>
 
-              <Typography 
+          <Paper
+            component="form"
+            onSubmit={handleSubmit}
+            elevation={0}
+            sx={{
+              p: { xs: 1, md: 1.5 },
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              borderRadius: '20px',
+              bgcolor: '#FFFFFF',
+              boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
+              maxWidth: 540,
+              mx: { xs: 'auto', md: 0 },
+              transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 6px 28px rgba(0, 0, 0, 0.08)'
+              }
+            }}
+          >
+            <TextField
+              inputRef={searchInputRef}
+              fullWidth
+              placeholder="Enter postal code (e.g., M5V 2T6) or address"
+              variant="standard"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
+              error={!!error}
+              InputProps={{
+                startAdornment: (
+                  <Box sx={{ 
+                    p: 1, 
+                    bgcolor: '#F0FDF4', 
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}>
+                    <SearchIcon sx={{ color: '#2F7C31' }} />
+                  </Box>
+                ),
+                endAdornment: searchQuery && (
+                  <InputAdornment position="end">
+                    <Tooltip title="Clear input">
+                      <IconButton
+                        onClick={handleClear}
+                        edge="end"
+                        size="small"
+                        sx={{ 
+                          color: '#6B7280',
+                          '&:hover': { color: '#1A2027' }
+                        }}
+                      >
+                        <ClearIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </InputAdornment>
+                ),
+                disableUnderline: true,
+                sx: { 
+                  fontSize: '1.1rem',
+                  px: 2
+                }
+              }}
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={loading || !searchQuery}
+              sx={{
+                px: 4,
+                py: 1.5,
+                borderRadius: '16px',
+                bgcolor: '#2F7C31',
+                color: '#FFFFFF',
+                '&:hover': {
+                  bgcolor: '#2D6A2E'
+                },
+                '&:disabled': {
+                  bgcolor: '#9CA3AF'
+                }
+              }}
+            >
+              {loading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                'Get Estimate'
+              )}
+            </Button>
+          </Paper>
+
+          {error && (
+            <Fade in={!!error}>
+              <Alert 
+                severity="error" 
                 sx={{ 
-                  color: '#4B5563',
-                  mb: 6,
-                  fontSize: { xs: '1.1rem', md: '1.25rem' },
-                  maxWidth: '540px',
+                  mt: 3, 
+                  maxWidth: 540, 
                   mx: { xs: 'auto', md: 0 },
-                  lineHeight: 1.6,
-                  letterSpacing: '-0.01em'
-                }}
-              >
-                Get instant insights about your home's energy efficiency, window configuration, and size using our advanced AI-powered estimation tools.
-              </Typography>
-
-              {/* Search Box */}
-              <Paper
-                elevation={0}
-                sx={{
-                  p: { xs: 1, md: 1.5 },
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 2,
-                  borderRadius: '20px',
-                  bgcolor: '#FFFFFF',
-                  boxShadow: '0 4px 24px rgba(0, 0, 0, 0.06)',
-                  maxWidth: 540,
-                  mx: { xs: 'auto', md: 0 },
-                  transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 6px 28px rgba(0, 0, 0, 0.08)'
+                  borderRadius: '12px',
+                  '& .MuiAlert-icon': {
+                    color: '#DC2626'
                   }
                 }}
               >
-                <TextField
-                  fullWidth
-                  placeholder="Enter your postal code"
-                  variant="standard"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
-                  InputProps={{
-                    startAdornment: (
-                      <Box sx={{ 
-                        p: 1, 
-                        bgcolor: '#F0FDF4', 
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center'
-                      }}>
-                        <SearchIcon sx={{ color: '#2F7C31' }} />
-                      </Box>
-                    ),
-                    disableUnderline: true,
-                    sx: { 
-                      fontSize: '1.1rem',
-                      px: 2
-                    }
-                  }}
-                />
-                <Button
-                  variant="contained"
-                  disabled={loading}
-                  onClick={handleSubmit}
-                  sx={{
-                    background: 'linear-gradient(135deg, #2F7C31 0%, #38A169 100%)',
-                    borderRadius: '16px',
-                    px: { xs: 3, md: 4 },
-                    py: 1.5,
-                    textTransform: 'none',
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    boxShadow: '0 4px 12px rgba(47, 124, 49, 0.2)',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #266E27 0%, #2F8653 100%)',
-                      boxShadow: '0 6px 16px rgba(47, 124, 49, 0.25)'
-                    }
-                  }}
-                >
-                  {loading ? <CircularProgress size={24} color="inherit" /> : 'Analyze Now'}
-                </Button>
-              </Paper>
-              {error && (
-                <Typography 
-                  color="error" 
-                  sx={{ 
-                    mt: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    justifyContent: { xs: 'center', md: 'flex-start' },
-                    fontSize: '0.95rem',
-                    bgcolor: 'rgba(239, 68, 68, 0.1)',
-                    p: 2,
-                    borderRadius: '12px'
-                  }}
-                >
-                  <InfoIcon fontSize="small" />
-                  {error}
-                </Typography>
-              )}
-            </Grid>
-          </Grid>
+                {error}
+              </Alert>
+            </Fade>
+          )}
         </Container>
       </Box>
 
       {/* Results Section */}
       {results && (
-        <>
+        <Fade in={!!results}>
           <Box 
             ref={resultsRef}
             sx={{ 
@@ -378,134 +372,117 @@ function App() {
                 </Box>
               )}
 
-              <Grid container spacing={4}>
+              <Grid container spacing={{ xs: 6, md: 4 }}>
                 {/* House Size Card */}
                 <Grid item xs={12} md={4}>
                   <Paper
                     elevation={0}
                     sx={{
-                      position: 'relative',
-                      p: 4,
-                      height: '100%',
+                      p: { xs: 3, md: 4 },
                       borderRadius: '24px',
-                      background: '#FFFFFF',
-                      transition: 'all 0.3s ease-in-out',
-                      overflow: 'hidden',
+                      bgcolor: '#FFFFFF',
+                      height: '100%',
+                      mb: { xs: 6, md: 0 },
                       border: '1px solid rgba(0, 0, 0, 0.05)',
+                      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
                       '&:hover': {
                         transform: 'translateY(-4px)',
-                        boxShadow: '0 16px 32px rgba(0, 0, 0, 0.06)'
+                        boxShadow: '0 12px 24px rgba(0, 0, 0, 0.06)'
                       }
                     }}
                   >
-                    <Box sx={{ position: 'relative' }}>
-                      <Box sx={{ mb: 4 }}>
-                        <Box
-                          sx={{
-                            width: 64,
-                            height: 64,
-                            borderRadius: '20px',
-                            background: 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mb: 3,
-                            transform: 'rotate(-5deg)',
-                            boxShadow: '0 8px 16px rgba(47, 124, 49, 0.1)'
-                          }}
-                        >
-                          <HomeIcon sx={{ fontSize: 32, color: '#2F7C31' }} />
-                        </Box>
-                        <Typography variant="h6" sx={{ color: '#1A2027', fontWeight: 600, mb: 1, letterSpacing: '-0.01em' }}>
-                          House Size
-                        </Typography>
-                        <Typography variant="h3" sx={{ color: '#2F7C31', fontWeight: 800, letterSpacing: '-0.02em' }}>
-                          {results.houseSize.toLocaleString()}
-                          <Typography component="span" sx={{ fontSize: '1.1rem', color: '#4B5563', ml: 1, fontWeight: 500 }}>
-                            sq ft
-                          </Typography>
-                        </Typography>
+                    <Box sx={{ mb: 4 }}>
+                      <Box
+                        sx={{
+                          width: 56,
+                          height: 56,
+                          borderRadius: '16px',
+                          bgcolor: '#F0FDF4',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          mb: 3
+                        }}
+                      >
+                        <HomeIcon sx={{ fontSize: 28, color: '#2F7C31' }} />
                       </Box>
+                      <Typography variant="h6" sx={{ color: '#1A2027', fontWeight: 600, mb: 3 }}>
+                        House Size
+                      </Typography>
+                    </Box>
 
-                      {isEditing ? (
-                        <Box>
-                          <Slider
-                            value={customSize || results.houseSize}
-                            onChange={handleSizeChange}
-                            min={500}
-                            max={5000}
-                            step={100}
-                            marks
-                            valueLabelDisplay="auto"
-                            sx={{
-                              '& .MuiSlider-track': { 
-                                background: 'linear-gradient(to right, #2F7C31, #38A169)',
-                                height: 6,
-                                border: 'none'
-                              },
-                              '& .MuiSlider-rail': { 
-                                backgroundColor: '#E5E7EB',
-                                height: 6
-                              },
-                              '& .MuiSlider-thumb': { 
-                                width: 20,
-                                height: 20,
-                                backgroundColor: '#FFFFFF',
-                                boxShadow: '0 2px 8px rgba(47, 124, 49, 0.25)',
-                                '&:hover, &.Mui-focusVisible': {
-                                  boxShadow: '0 0 0 8px rgba(47, 124, 49, 0.16)'
-                                }
-                              },
-                              '& .MuiSlider-mark': { 
-                                backgroundColor: '#2F7C31',
-                                height: 2
-                              }
-                            }}
-                          />
-                          <Button
-                            fullWidth
-                            variant="outlined"
-                            onClick={() => setIsEditing(false)}
-                            sx={{
-                              mt: 3,
-                              color: '#2F7C31',
-                              borderColor: '#2F7C31',
-                              borderRadius: '16px',
-                              py: 1.5,
-                              textTransform: 'none',
-                              fontSize: '1rem',
-                              fontWeight: 600,
-                              '&:hover': {
-                                borderColor: '#266E27',
-                                bgcolor: '#F0FDF4'
-                              }
-                            }}
-                          >
-                            Save Changes
-                          </Button>
-                        </Box>
-                      ) : (
-                        <Button
-                          fullWidth
-                          variant="text"
-                          onClick={() => setIsEditing(true)}
-                          startIcon={<HomeIcon />}
-                          sx={{
-                            color: '#2F7C31',
-                            bgcolor: '#F0FDF4',
-                            '&:hover': {
-                              bgcolor: '#DCFCE7'
+                    <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 3 }}>
+                      <Typography variant="h3" sx={{ color: '#2F7C31', fontWeight: 800, letterSpacing: '-0.02em' }}>
+                        {results.houseSize.toLocaleString()}
+                      </Typography>
+                      <Typography sx={{ color: '#4B5563', fontSize: '1.1rem' }}>
+                        sq ft
+                      </Typography>
+                    </Box>
+
+                    <Box sx={{ mt: 4 }}>
+                      <Typography sx={{ color: '#4B5563', mb: 2, fontWeight: 500 }}>
+                        Adjust Size
+                      </Typography>
+                      <Slider
+                        value={customSize || results.houseSize}
+                        onChange={handleSizeChange}
+                        min={500}
+                        max={5000}
+                        step={100}
+                        marks
+                        valueLabelDisplay="auto"
+                        valueLabelFormat={(value) => `${value.toLocaleString()} sq ft`}
+                        sx={{
+                          color: '#2F7C31',
+                          '& .MuiSlider-thumb': {
+                            width: 24,
+                            height: 24,
+                            backgroundColor: '#fff',
+                            border: '2px solid #2F7C31',
+                            '&:focus, &:hover, &.Mui-active, &.Mui-focusVisible': {
+                              boxShadow: 'inherit',
                             },
-                            textTransform: 'none',
-                            borderRadius: '16px',
-                            py: 1.75,
-                            fontSize: '1rem',
-                            fontWeight: 600
-                          }}
-                        >
-                          Adjust Size
-                        </Button>
-                      )}
+                            '&:before': {
+                              display: 'none',
+                            },
+                          },
+                          '& .MuiSlider-track': {
+                            height: 8,
+                            borderRadius: 4,
+                          },
+                          '& .MuiSlider-rail': {
+                            height: 8,
+                            borderRadius: 4,
+                            backgroundColor: '#E5E7EB',
+                          },
+                          '& .MuiSlider-mark': {
+                            backgroundColor: '#E5E7EB',
+                            height: 8,
+                            width: 2,
+                            '&.MuiSlider-markActive': {
+                              backgroundColor: '#2F7C31',
+                            },
+                          },
+                          '& .MuiSlider-markLabel': {
+                            fontSize: '0.875rem',
+                            color: '#6B7280',
+                          },
+                          '& .MuiSlider-valueLabel': {
+                            backgroundColor: '#2F7C31',
+                            color: '#FFFFFF',
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            '&:before': {
+                              display: 'none',
+                            },
+                            '& *': {
+                              background: 'transparent',
+                              color: '#FFFFFF',
+                            },
+                          },
+                        }}
+                      />
                     </Box>
                   </Paper>
                 </Grid>
@@ -515,88 +492,89 @@ function App() {
                   <Paper
                     elevation={0}
                     sx={{
-                      position: 'relative',
-                      p: 4,
-                      height: '100%',
+                      p: { xs: 3, md: 4 },
                       borderRadius: '24px',
-                      background: '#FFFFFF',
-                      transition: 'all 0.3s ease-in-out',
-                      overflow: 'hidden',
+                      bgcolor: '#FFFFFF',
+                      height: '100%',
+                      mb: { xs: 6, md: 0 },
                       border: '1px solid rgba(0, 0, 0, 0.05)',
+                      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
                       '&:hover': {
                         transform: 'translateY(-4px)',
-                        boxShadow: '0 16px 32px rgba(0, 0, 0, 0.06)'
+                        boxShadow: '0 12px 24px rgba(0, 0, 0, 0.06)'
                       }
                     }}
                   >
                     <Box sx={{ mb: 4 }}>
                       <Box
                         sx={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: '20px',
-                          background: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)',
+                          width: 56,
+                          height: 56,
+                          borderRadius: '16px',
+                          bgcolor: '#F0FDF4',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          mb: 3,
-                          transform: 'rotate(-5deg)',
-                          boxShadow: '0 8px 16px rgba(3, 105, 161, 0.1)'
+                          mb: 3
                         }}
                       >
-                        <WindowIcon sx={{ fontSize: 32, color: '#0369A1' }} />
+                        <WindowIcon sx={{ fontSize: 28, color: '#2F7C31' }} />
                       </Box>
-                      <Typography variant="h6" sx={{ color: '#1A2027', fontWeight: 600, mb: 1, letterSpacing: '-0.01em' }}>
+                      <Typography variant="h6" sx={{ color: '#1A2027', fontWeight: 600, mb: 3 }}>
                         Windows
-                      </Typography>
-                      <Typography variant="h3" sx={{ color: '#0369A1', fontWeight: 800, letterSpacing: '-0.02em' }}>
-                        {results.windows}
-                        <Typography component="span" sx={{ fontSize: '1.1rem', color: '#4B5563', ml: 1, fontWeight: 500 }}>
-                          total
-                        </Typography>
                       </Typography>
                     </Box>
 
-                    <Grid container spacing={2.5}>
-                      <Grid item xs={6}>
+                    <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 3 }}>
+                      <Typography variant="h3" sx={{ color: '#2F7C31', fontWeight: 800, letterSpacing: '-0.02em' }}>
+                        {results.windows}
+                      </Typography>
+                      <Typography sx={{ color: '#4B5563', fontSize: '1.1rem' }}>
+                        windows
+                      </Typography>
+                    </Box>
+
+                    <Box sx={{ mt: 4 }}>
+                      <Typography sx={{ color: '#4B5563', mb: 2, fontWeight: 500 }}>
+                        Window Distribution
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 2 }}>
                         <Paper
                           elevation={0}
                           sx={{
-                            p: 2.5,
-                            textAlign: 'center',
-                            background: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)',
-                            borderRadius: '16px',
-                            border: '1px solid rgba(3, 105, 161, 0.1)'
+                            flex: 1,
+                            p: 2,
+                            bgcolor: '#F0FDF4',
+                            borderRadius: '12px',
+                            textAlign: 'center'
                           }}
                         >
-                          <Typography variant="h4" sx={{ color: '#0369A1', fontWeight: 800, mb: 1, letterSpacing: '-0.02em' }}>
+                          <Typography sx={{ color: '#2F7C31', fontWeight: 600, mb: 1 }}>
                             {Math.round(results.windows * 0.6)}
                           </Typography>
-                          <Typography sx={{ color: '#4B5563', fontSize: '0.875rem', fontWeight: 500 }}>
+                          <Typography sx={{ color: '#4B5563', fontSize: '0.875rem' }}>
                             Standard
                           </Typography>
                         </Paper>
-                      </Grid>
-                      <Grid item xs={6}>
                         <Paper
                           elevation={0}
                           sx={{
-                            p: 2.5,
-                            textAlign: 'center',
-                            background: 'linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)',
-                            borderRadius: '16px',
-                            border: '1px solid rgba(3, 105, 161, 0.1)'
+                            flex: 1,
+                            p: 2,
+                            bgcolor: '#F0FDF4',
+                            borderRadius: '12px',
+                            textAlign: 'center'
                           }}
                         >
-                          <Typography variant="h4" sx={{ color: '#0369A1', fontWeight: 800, mb: 1, letterSpacing: '-0.02em' }}>
+                          <Typography sx={{ color: '#2F7C31', fontWeight: 600, mb: 1 }}>
                             {Math.round(results.windows * 0.4)}
                           </Typography>
-                          <Typography sx={{ color: '#4B5563', fontSize: '0.875rem', fontWeight: 500 }}>
+                          <Typography sx={{ color: '#4B5563', fontSize: '0.875rem' }}>
                             Large
                           </Typography>
                         </Paper>
-                      </Grid>
-                    </Grid>
+                      </Box>
+                    </Box>
                   </Paper>
                 </Grid>
 
@@ -605,237 +583,250 @@ function App() {
                   <Paper
                     elevation={0}
                     sx={{
-                      position: 'relative',
-                      p: 4,
-                      height: '100%',
+                      p: { xs: 3, md: 4 },
                       borderRadius: '24px',
-                      background: '#FFFFFF',
-                      transition: 'all 0.3s ease-in-out',
-                      overflow: 'hidden',
+                      bgcolor: '#FFFFFF',
+                      height: '100%',
+                      mb: { xs: 6, md: 0 },
                       border: '1px solid rgba(0, 0, 0, 0.05)',
+                      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
                       '&:hover': {
                         transform: 'translateY(-4px)',
-                        boxShadow: '0 16px 32px rgba(0, 0, 0, 0.06)'
+                        boxShadow: '0 12px 24px rgba(0, 0, 0, 0.06)'
                       }
                     }}
                   >
                     <Box sx={{ mb: 4 }}>
                       <Box
                         sx={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: '20px',
-                          background: 'linear-gradient(135deg, #FEF9C3 0%, #FEF08A 100%)',
+                          width: 56,
+                          height: 56,
+                          borderRadius: '16px',
+                          bgcolor: '#F0FDF4',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          mb: 3,
-                          transform: 'rotate(-5deg)',
-                          boxShadow: '0 8px 16px rgba(202, 138, 4, 0.1)'
+                          mb: 3
                         }}
                       >
-                        <BoltIcon sx={{ fontSize: 32, color: '#CA8A04' }} />
+                        <BoltIcon sx={{ fontSize: 28, color: '#2F7C31' }} />
                       </Box>
-                      <Typography variant="h6" sx={{ color: '#1A2027', fontWeight: 600, mb: 1, letterSpacing: '-0.01em' }}>
+                      <Typography variant="h6" sx={{ color: '#1A2027', fontWeight: 600, mb: 3 }}>
                         Energy Usage
-                      </Typography>
-                      <Typography variant="h3" sx={{ color: '#CA8A04', fontWeight: 800, letterSpacing: '-0.02em' }}>
-                        {results.energy.electricity.toLocaleString()}
-                        <Typography component="span" sx={{ fontSize: '1.1rem', color: '#4B5563', ml: 1, fontWeight: 500 }}>
-                          kWh/year
-                        </Typography>
                       </Typography>
                     </Box>
 
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 3,
-                        background: 'linear-gradient(135deg, #FEF9C3 0%, #FEF08A 100%)',
-                        borderRadius: '16px',
-                        textAlign: 'center',
-                        border: '1px solid rgba(202, 138, 4, 0.1)'
-                      }}
-                    >
-                      <Typography variant="h4" sx={{ color: '#CA8A04', fontWeight: 800, mb: 1, letterSpacing: '-0.02em' }}>
-                        {results.energy.total.toLocaleString()} GJ
-                      </Typography>
-                      <Typography sx={{ color: '#4B5563', fontWeight: 500 }}>
-                        Total Annual Energy
-                      </Typography>
-                    </Paper>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 3,
+                          background: 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)',
+                          borderRadius: '16px',
+                          textAlign: 'center',
+                          border: '1px solid rgba(47, 124, 49, 0.1)'
+                        }}
+                      >
+                        <Typography variant="h4" sx={{ color: '#2F7C31', fontWeight: 800, mb: 1, letterSpacing: '-0.02em' }}>
+                          {results.energy.electricity.toLocaleString()}
+                        </Typography>
+                        <Typography sx={{ color: '#4B5563', fontWeight: 500 }}>
+                          kWh/year
+                        </Typography>
+                      </Paper>
+
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 3,
+                          background: 'linear-gradient(135deg, #FEF9C3 0%, #FEF08A 100%)',
+                          borderRadius: '16px',
+                          textAlign: 'center',
+                          border: '1px solid rgba(202, 138, 4, 0.1)'
+                        }}
+                      >
+                        <Typography variant="h4" sx={{ color: '#CA8A04', fontWeight: 800, mb: 1, letterSpacing: '-0.02em' }}>
+                          {results.energy.total.toLocaleString()} GJ
+                        </Typography>
+                        <Typography sx={{ color: '#4B5563', fontWeight: 500 }}>
+                          Total Annual Energy
+                        </Typography>
+                      </Paper>
+                    </Box>
                   </Paper>
                 </Grid>
               </Grid>
             </Container>
           </Box>
+        </Fade>
+      )}
 
-          {/* Map Section */}
-          {addressDetails && (
-            <Box sx={{ py: 6, bgcolor: '#FFFFFF' }}>
-              <Container maxWidth="lg">
-                <Typography 
-                  variant="h4" 
-                  sx={{ 
-                    fontWeight: 700,
-                    color: '#1A2027',
-                    mb: 4,
-                    textAlign: 'center'
-                  }}
-                >
-                  Location Details
-                </Typography>
-                
-                <Grid container spacing={4}>
-                  <Grid item xs={12} md={4}>
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 4,
-                        borderRadius: '24px',
-                        bgcolor: '#F8FAFC',
-                        height: '100%',
-                        border: '1px solid rgba(0, 0, 0, 0.05)'
-                      }}
-                    >
-                      <Box sx={{ mb: 4 }}>
-                        <Box
+      {/* Map Section */}
+      {addressDetails && (
+        <Fade in={!!addressDetails}>
+          <Box sx={{ py: 6, bgcolor: '#FFFFFF' }}>
+            <Container maxWidth="lg">
+              <Typography 
+                variant="h4" 
+                sx={{ 
+                  fontWeight: 700,
+                  color: '#1A2027',
+                  mb: 4,
+                  textAlign: 'center'
+                }}
+              >
+                Location Details
+              </Typography>
+              
+              <Grid container spacing={{ xs: 3, md: 4 }}>
+                <Grid item xs={12} md={4}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: { xs: 3, md: 4 },
+                      borderRadius: '24px',
+                      bgcolor: '#F8FAFC',
+                      height: '100%',
+                      border: '1px solid rgba(0, 0, 0, 0.05)'
+                    }}
+                  >
+                    <Box sx={{ mb: 4 }}>
+                      <Box
+                        sx={{
+                          width: 56,
+                          height: 56,
+                          borderRadius: '16px',
+                          bgcolor: '#F0F7FF',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          mb: 3
+                        }}
+                      >
+                        <LocationIcon sx={{ fontSize: 28, color: '#2F7C31' }} />
+                      </Box>
+                      <Typography variant="h6" sx={{ color: '#1A2027', fontWeight: 600, mb: 3 }}>
+                        Address Information
+                      </Typography>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {/* Street Address */}
+                      <Box>
+                        <Typography sx={{ color: '#4B5563', fontSize: '0.875rem', mb: 1, fontWeight: 500 }}>
+                          Street Address
+                        </Typography>
+                        <Paper
+                          elevation={0}
                           sx={{
-                            width: 56,
-                            height: 56,
-                            borderRadius: '16px',
-                            bgcolor: '#F0F7FF',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mb: 3
+                            p: 2,
+                            bgcolor: '#FFFFFF',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(0, 0, 0, 0.05)'
                           }}
                         >
-                          <LocationIcon sx={{ fontSize: 28, color: '#2F7C31' }} />
-                        </Box>
-                        <Typography variant="h6" sx={{ color: '#1A2027', fontWeight: 600, mb: 3 }}>
-                          Address Information
+                          <Typography sx={{ color: '#1A2027', fontWeight: 500 }}>
+                            {addressDetails.components
+                              .filter(c => c.types.includes('street_number') || c.types.includes('route'))
+                              .map(c => c.long_name)
+                              .join(' ')}
+                          </Typography>
+                        </Paper>
+                      </Box>
+
+                      {/* City & Province */}
+                      <Box>
+                        <Typography sx={{ color: '#4B5563', fontSize: '0.875rem', mb: 1, fontWeight: 500 }}>
+                          City & Province
                         </Typography>
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            p: 2,
+                            bgcolor: '#FFFFFF',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(0, 0, 0, 0.05)'
+                          }}
+                        >
+                          <Typography sx={{ color: '#1A2027', fontWeight: 500 }}>
+                            {[
+                              addressDetails.components.find(c => c.types.includes('locality'))?.long_name,
+                              addressDetails.components.find(c => c.types.includes('administrative_area_level_1'))?.long_name
+                            ].filter(Boolean).join(', ')}
+                          </Typography>
+                        </Paper>
                       </Box>
 
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                        {/* Street Address */}
-                        <Box>
-                          <Typography sx={{ color: '#4B5563', fontSize: '0.875rem', mb: 1, fontWeight: 500 }}>
-                            Street Address
+                      {/* Postal Code */}
+                      <Box>
+                        <Typography sx={{ color: '#4B5563', fontSize: '0.875rem', mb: 1, fontWeight: 500 }}>
+                          Postal Code
+                        </Typography>
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            p: 2,
+                            bgcolor: '#FFFFFF',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(0, 0, 0, 0.05)'
+                          }}
+                        >
+                          <Typography sx={{ color: '#1A2027', fontWeight: 500 }}>
+                            {addressDetails.components.find(c => c.types.includes('postal_code'))?.long_name || 'N/A'}
                           </Typography>
-                          <Paper
-                            elevation={0}
-                            sx={{
-                              p: 2,
-                              bgcolor: '#FFFFFF',
-                              borderRadius: '12px',
-                              border: '1px solid rgba(0, 0, 0, 0.05)'
-                            }}
-                          >
-                            <Typography sx={{ color: '#1A2027', fontWeight: 500 }}>
-                              {addressDetails.components
-                                .filter(c => c.types.includes('street_number') || c.types.includes('route'))
-                                .map(c => c.long_name)
-                                .join(' ')}
-                            </Typography>
-                          </Paper>
-                        </Box>
-
-                        {/* City & Province */}
-                        <Box>
-                          <Typography sx={{ color: '#4B5563', fontSize: '0.875rem', mb: 1, fontWeight: 500 }}>
-                            City & Province
-                          </Typography>
-                          <Paper
-                            elevation={0}
-                            sx={{
-                              p: 2,
-                              bgcolor: '#FFFFFF',
-                              borderRadius: '12px',
-                              border: '1px solid rgba(0, 0, 0, 0.05)'
-                            }}
-                          >
-                            <Typography sx={{ color: '#1A2027', fontWeight: 500 }}>
-                              {[
-                                addressDetails.components.find(c => c.types.includes('locality'))?.long_name,
-                                addressDetails.components.find(c => c.types.includes('administrative_area_level_1'))?.long_name
-                              ].filter(Boolean).join(', ')}
-                            </Typography>
-                          </Paper>
-                        </Box>
-
-                        {/* Postal Code */}
-                        <Box>
-                          <Typography sx={{ color: '#4B5563', fontSize: '0.875rem', mb: 1, fontWeight: 500 }}>
-                            Postal Code
-                          </Typography>
-                          <Paper
-                            elevation={0}
-                            sx={{
-                              p: 2,
-                              bgcolor: '#FFFFFF',
-                              borderRadius: '12px',
-                              border: '1px solid rgba(0, 0, 0, 0.05)'
-                            }}
-                          >
-                            <Typography sx={{ color: '#1A2027', fontWeight: 500 }}>
-                              {addressDetails.components.find(c => c.types.includes('postal_code'))?.long_name || 'N/A'}
-                            </Typography>
-                          </Paper>
-                        </Box>
-
-                        {/* Property Type */}
-                        <Box>
-                          <Typography sx={{ color: '#4B5563', fontSize: '0.875rem', mb: 1, fontWeight: 500 }}>
-                            Property Type
-                          </Typography>
-                          <Paper
-                            elevation={0}
-                            sx={{
-                              p: 2,
-                              bgcolor: '#FFFFFF',
-                              borderRadius: '12px',
-                              border: '1px solid rgba(0, 0, 0, 0.05)'
-                            }}
-                          >
-                            <Typography sx={{ color: '#1A2027', fontWeight: 500 }}>
-                              {results.isRural ? 'Rural Property' : 'Urban Property'}
-                            </Typography>
-                          </Paper>
-                        </Box>
+                        </Paper>
                       </Box>
-                    </Paper>
-                  </Grid>
-                  
-                  <Grid item xs={12} md={8}>
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        borderRadius: '24px',
-                        overflow: 'hidden',
-                        height: '400px',
-                        border: '1px solid rgba(0, 0, 0, 0.05)'
-                      }}
-                    >
-                      <iframe
-                        width="100%"
-                        height="100%"
-                        frameBorder="0"
-                        style={{ border: 0 }}
-                        src={getMapUrl()}
-                        allowFullScreen
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        title="Location Map"
-                      />
-                    </Paper>
-                  </Grid>
+
+                      {/* Property Type */}
+                      <Box>
+                        <Typography sx={{ color: '#4B5563', fontSize: '0.875rem', mb: 1, fontWeight: 500 }}>
+                          Property Type
+                        </Typography>
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            p: 2,
+                            bgcolor: '#FFFFFF',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(0, 0, 0, 0.05)'
+                          }}
+                        >
+                          <Typography sx={{ color: '#1A2027', fontWeight: 500 }}>
+                            {results.isRural ? 'Rural Property' : 'Urban Property'}
+                          </Typography>
+                        </Paper>
+                      </Box>
+                    </Box>
+                  </Paper>
                 </Grid>
-              </Container>
-            </Box>
-          )}
-        </>
+                
+                <Grid item xs={12} md={8}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      borderRadius: '24px',
+                      overflow: 'hidden',
+                      height: '400px',
+                      border: '1px solid rgba(0, 0, 0, 0.05)'
+                    }}
+                  >
+                    <iframe
+                      width="100%"
+                      height="100%"
+                      frameBorder="0"
+                      style={{ border: 0 }}
+                      src={getMapUrl()}
+                      allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Location Map"
+                    />
+                  </Paper>
+                </Grid>
+              </Grid>
+            </Container>
+          </Box>
+        </Fade>
       )}
     </Box>
   );
